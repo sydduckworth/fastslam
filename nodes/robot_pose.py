@@ -7,3 +7,4 @@ class Robot_Pose():
 		self.x = x
 		self.y = y
 		self.theta = theta
+		self.loc = (x, y)

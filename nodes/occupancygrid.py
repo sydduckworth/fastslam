@@ -40,7 +40,7 @@ class OccupancyGrid(object):
 		elif self[coords[0]][coords[1]]:
 			return coords
 		else:
-			next_coords = (coords[0] +  math.cos(angle)*self.step, coords[1] +  math.sin(angle)*self.step)
+			next_coords = (coords[0] + math.cos(angle)*self.step, coords[1] + math.sin(angle)*self.step)
 			return self.rayTrace(next_coords, angle)
 
 	def rayTraceTo(self, coords1, coords2):

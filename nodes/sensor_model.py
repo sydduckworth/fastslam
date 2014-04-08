@@ -1,6 +1,5 @@
 import math
-
-
+import prob_utilities as prob_util
 
 """
 Key assumptions:
@@ -13,48 +12,43 @@ Key assumptions:
 	- Assume rangefinder shares x,y location of robot pose 
 """
 
-#variables that alter sensor model
-z_max = 0 		#maximum allowable range value from range sensor
-#TODO: find out what z_hit, sigma_hit, and z_rand are!
-z_hit = 0 		#??
-sigma_hit = 0 	#??
-z_rand = 0 		#??
+class Simple_Laser_Sensor_Model():
 
+	def __init__(self, stddev = 2.5):
+		self.stddev = stddev
 
-'''
-	params:
-	  - z_t: sensor readings
-	  - pose (x_t): robot pose
-	  - m: map
-	return: importance weight
-	note: importance weight is a belief in the current sensor reading given the pose and the map
-'''
-def measurement_model_map(z_t = [], pose = None, m = None):
-	return 
+	'''
+	measurement_model_map
+		params:
+		  - z_t: sensor readings (Laser_Scan())
+		  - pose (x_t): robot pose
+		  - m: map
+		return: importance weight
+		note: importance weight is a belief in the current sensor reading given the pose and the map
+	'''
+	def measurement_model_map(self, z_t = [], pose = None, m = None):
+		return self.simple_laser_model(z_t, pose, m)
 
-#THIS FUNCTION IS DEPRECATED
-def likelihood_field_range_finder_model(z_t = [], pose = None, m = None):
-	global z_max, z_hit, z_rand, sigma_hit
-	
-	w = 1 #importance weight
-	#for each reading in z_t
-	for k in xrange(0, len(z_t)):
-		sens_theta = 0 #TODO: calculate sensor reading theta!
-		sens_x = pose.x #Assume sensor x = robot pose x
-		sens_y = pose.y #Assume sensor y = robot pose y
+	'''
+	simple_laser_model
+		params:
+		 - see above function
+		returns the probability of receiving sensor reading z_t given the current pose and a map
+		 - P(z|x_t, m_t-1)
+	'''
+	def simple_laser_model(self, z_t, pose, m):
+		result = 1.0
+		cur_angle = z_t.angle_min 				#store current angle in radians
+		inc_angle = z_t.angle_increment 		#angle increment between scans in radians
+		for i in xrange(0, len(z_t.ranges)):
+			#get the expected distance to obstacle
+			expected_distance = m.rayTrace(pose.loc, cur_angle)
+			result *= self.getProbReadingGivenDistance(z_t.ranges[i], expected_distance)
+			cur_angle += inc_angle
+		return result
 
-		if (z_t[k] < z_max):
-			z_endpoint_x = pose.x + (sens_x * math.cos(pose.theta)) - (sens_y * math.sin(pose.theta)) + (z_t[k] * math.cos(pose.theta + sens_theta)) #x endpoint of sensor reading projected onto grid
-			z_endpoint_y = pose.y + (sens_y * math.cos(pose.theta)) + (sens_x * math.sin(pose.theta)) + (z_t[k] * math.sin(pose.theta + sens_theta)) #y endpoint of sensor reading projected onto grid
-			dist = m.get_dist_to_nearest_occupied((z_endpoint_x, z_endpoint_y)) #eucl dist to nearest object in grid
-			#if the endpoint of sensor reading is uknown, we no nothing about it and we just use 1/float(z_max) as our belief for this particular reading
-			if (not m[z_endpoint_x][z_endpoint_y].unknown):
-				w = w * (z_hit * prob_dist(dist, sigma_hit) + (float(z_rand)/float(z_max)))
-			else:
-				w = w * (1.0/float(z_max))
-	return w
-
-#G
-def guassian_dist(distance, sigma):
-	return
-
+	def getProbReadingGivenDistance(self, sensor_distance = 0, expected_distance = 0):
+		#alpha is 1.0 divided by the area of the normal curve that is to the right of 0.0
+		#Basically, it is the renormalization constant.
+		alpha = 1.0/(1.0 - prob_util.getCND(0.0, expected_distance, self.stddev))
+		return alpha * prob_util.getProbND(sensor_distance, expected_distance, self.stddev)
