@@ -1,5 +1,7 @@
 import math
 
+
+
 """
 Key assumptions:
 	- Everyone needs to agree on Theta in robot's pose
@@ -28,9 +30,9 @@ z_rand = 0 		#??
 	note: importance weight is a belief in the current sensor reading given the pose and the map
 '''
 def measurement_model_map(z_t = [], pose = None, m = None):
-	#use likelihood_field_range_finder_model to determine weight
-	return likelihood_field_range_finder_model(z_t, pose, m)
+	return 
 
+#THIS FUNCTION IS DEPRECATED
 def likelihood_field_range_finder_model(z_t = [], pose = None, m = None):
 	global z_max, z_hit, z_rand, sigma_hit
 	
@@ -52,4 +54,7 @@ def likelihood_field_range_finder_model(z_t = [], pose = None, m = None):
 				w = w * (1.0/float(z_max))
 	return w
 
+#G
+def guassian_dist(distance, sigma):
+	return
 
