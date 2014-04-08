@@ -11,6 +11,8 @@ This module contains various useful probability utilities.
 getCND
 
 This function gets the cumulative normal distribution using erf and erfc functions.
+ - The cumulative normal distribution function describes the probability that random variable X will be found at a 
+ 	value less than or equal to x.
 '''
 def getCND(x, mean, stddev):
 	z = float(x - mean) / float(stddev)
