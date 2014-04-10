@@ -37,18 +37,23 @@ class Simple_Laser_Sensor_Model():
 		 - P(z|x_t, m_t-1)
 	'''
 	def simple_laser_model(self, z_t, pose, m):
+		#TODO: probably don't want to use all range scans
 		result = 1.0
 		cur_angle = z_t.angle_min 				#store current angle in radians
 		inc_angle = z_t.angle_increment 		#angle increment between scans in radians
+		range_max = z_t.range_max
 		for i in xrange(0, len(z_t.ranges)):
 			#get the expected distance to obstacle
 			expected_distance = m.rayTrace(pose.loc, cur_angle + pose.theta)
-			result *= self.getProbReadingGivenDistance(z_t.ranges[i], expected_distance)
+			result *= self.getProbReadingGivenDistance(z_t.ranges[i], expected_distance, range_max)
 			cur_angle += inc_angle
 		return result
 
-	def getProbReadingGivenDistance(self, sensor_distance = 0, expected_distance = 0):
+	def getProbReadingGivenDistance(self, sensor_distance = 0, expected_distance = 0, max_distance = 0):
 		#alpha is 1.0 divided by the area of the normal curve that is to the right of 0.0
 		#Basically, it is the renormalization constant.
 		alpha = 1.0/(1.0 - prob_util.getCND(0.0, expected_distance, self.stddev))
+	    beta = 1.0 - prob_util.getCND(max_distance, true_distance, stddev) #probability of max range
+    	if (sensor_distance >= max_distance):
+     	    return beta
 		return alpha * prob_util.getProbND(sensor_distance, expected_distance, self.stddev)
