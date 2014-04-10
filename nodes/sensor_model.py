@@ -42,7 +42,7 @@ class Simple_Laser_Sensor_Model():
 		inc_angle = z_t.angle_increment 		#angle increment between scans in radians
 		for i in xrange(0, len(z_t.ranges)):
 			#get the expected distance to obstacle
-			expected_distance = m.rayTrace(pose.loc, cur_angle)
+			expected_distance = m.rayTrace(pose.loc, cur_angle + pose.theta)
 			result *= self.getProbReadingGivenDistance(z_t.ranges[i], expected_distance)
 			cur_angle += inc_angle
 		return result
