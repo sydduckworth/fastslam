@@ -4,7 +4,5 @@
 class Robot_Pose():
 
 	def __init__(self, x = 0, y = 0, theta = 0):
-		self.x = x
-		self.y = y
-		self.theta = theta
 		self.loc = (x, y)
+		self.theta = theta
