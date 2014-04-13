@@ -1,5 +1,6 @@
 from occupancygrid import *
 from robot_pose import *
+import random
 
 
 class Particle(object):

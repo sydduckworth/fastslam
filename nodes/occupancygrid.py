@@ -8,11 +8,11 @@ class OccupancyGrid(object):
 		"""
 
 		self.dimensions = dimensions
-		self.origin = (int(m/step + 1), int(n/step + 1))
+		self.origin = (int(dimensions[0]/step + 1), int(dimensions[1]/step + 1))
 		if step > 1:
 			raise TypeError("Step size cannot be greater than one.")
 		self.step = step
-		self.map = [GridList(n, self.origin, self.dimensions, self.step) for i in range(0, int(2*m/self.step) + 2)]
+		self.map = [GridList(self.origin, self.dimensions, self.step) for i in range(0, int(2*dimensions[0]/self.step) + 2)]
 
 	def __getitem__(self, key):
 		if abs(int(key)) <= self.dimensions[0]:
@@ -51,10 +51,51 @@ class OccupancyGrid(object):
 		angle = math.atan2((coords2[1] - coords1[1]), (coords2[0] - coords1[0]))
 		return self.map2grid(self.rayTrace(coords1, angle)) == self.map2grid(coords2)
 
+	def clearTo(self, coords1, coords2):
+		"""
+			Given two sets of coordinates, sets all cells between the points to empty
+		"""
+		if coords1 not in self or coords2 not in self:
+			return False
+		else:
+			angle = math.atan2((coords2[1] - coords1[1]), (coords2[0] - coords1[0]))
+			return self._clearToRecursive(coords1, coords2, angle)
+
+
+	def _clearToRecursive(self, coords1, coords2, angle):
+		if coords1 not in self:
+			return False
+		elif self.map2grid(coords1) == self.map2grid(coords2):
+			return True
+		else:
+			self[coords1[0]][coords1[1]] = False
+			next_coords1 = (coords1[0] + math.cos(angle)*self.step, coords1[1] + math.sin(angle)*self.step)
+			return self._clearToRecursive(next_coords1, coords2, angle)
+
+	def fillTo(self, coords1, coords2):
+		"""
+			Given two sets of coordinates, sets all cells between the points to occupied
+		"""
+		if coords1 not in self or coords2 not in self:
+			return False
+		else:
+			angle = math.atan2((coords2[1] - coords1[1]), (coords2[0] - coords1[0]))
+			return self._fillToRecursive(coords1, coords2, angle)
+
+
+	def _fillToRecursive(self, coords1, coords2, angle):
+		if coords1 not in self:
+			return False
+		elif self.map2grid(coords1) == self.map2grid(coords2):
+			return True
+		else:
+			self[coords1[0]][coords1[1]] = True
+			next_coords1 = (coords1[0] + math.cos(angle)*self.step, coords1[1] + math.sin(angle)*self.step)
+			return self._fillToRecursive(next_coords1, coords2, angle)
 
 class GridList(list):
-	def __init__(self, n, origin, dimensions, step):
-		self.data = [False for i in range(0, int(2*n/step) + 2)]
+	def __init__(self, origin, dimensions, step):
+		self.data = [False for i in range(0, int(2*dimensions[1]/step) + 2)]
 		self.dimensions = dimensions
 		self.origin = origin
 		self.step = step

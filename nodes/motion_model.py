@@ -1,16 +1,20 @@
 import robot_pose
 import prob_utilities
 import math
+import random
 
-class motion_model:
-	def __init__(self):
+from fastslam_utilities import *
+
+class MotionModel(object):
+	def __init__(self, stds = (.1, .1, .1)):
+		self.stds = stds
 		# alpha1 = 0.05 meters/meter
 		# alpha2 = 0.001 meters/degree
 		# alpha3 = 5 degrees/meter
 		# alpha4 = 0.05 degrees/degree
 
-	def update_motion(self, old_particle, cur_coords, cur_theta):
-		# break up old particle
+	def update_motion(old_particle, delta):
+		"""# break up old particle
 		old_x = old_particle.pose[0]
 		old_y = old_particle.pose[1]
 		old_theta - old_particle[2]
@@ -31,7 +35,12 @@ class motion_model:
 		p2 = prob_normal_dist(trans - n_trans, 5*n_trans+0.05(abs(n_rot1)+abs(n_rot2)))
 		p3 = prob_normal_dist(rot2 - n_rot2, 0.05*abs(n_rot2)+0.001*n_trans)
 
-		return p1*p2*p3
+		return p1*p2*p3"""
+
+		dx = random.gauss(delta[0], self.stds[0])
+		dy = random.gauss(delta[1], self.stds[1])
+		dtheta = wrap_angle(random.gauss(delta[2], self.stds[2]))
+		return (old_particle.pose.x + dx, old_particle.pose.y + dy, old_particle.pose.theta + dtheta)
 
 	def prob_normal_dist(self, a, b):
 		# normal distribution (zero-centered)

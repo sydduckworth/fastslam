@@ -41,14 +41,12 @@ class GenericBot(Robot):
 
 #Test Code
 """
-def smodel(**kwargs):
-	print(kwargs.keys())
+def smodel(a, b, c):
+	print(a, b, c);
 
 def mmodel(**kwargs):
-	print(kwargs.values())
+	pass
 
 tbot = GenericBot(smodel, mmodel)
-d = {"A":1, "B":2, "C":3}
-tbot.sensorModel(**d)
-tbot.motionModel(**d)
+tbot.sensorModel(a="A", b="B", c="C")
 """
