@@ -27,3 +27,11 @@ This function gets the value of the normal distribution at x.
 def getND(x, mean, stddev):
 	denom = math.sqrt(2.0 * math.pi) * stddev * math.exp(math.pow((x - mean), 2) / (2.0 * math.pow(stddev, 2)))
 	return 1.0/denom
+
+#Wrap an angle to be between -180 < < 180 (in radians though)
+def wrap_angle(angle):
+    while angle >= math.pi:
+        angle = angle - 2*math.pi
+    while angle <= -math.pi:
+        angle = angle + 2*math.pi
+    return angle

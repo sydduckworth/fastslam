@@ -18,7 +18,7 @@ class Simple_Laser_Sensor_Model():
 		self.stddev = stddev
 
 	'''
-	measurement_model_map
+	update
 		params:
 		  - z_t: sensor readings (Laser_Scan())
 		  - pose (x_t): robot pose
@@ -26,7 +26,7 @@ class Simple_Laser_Sensor_Model():
 		return: importance weight
 		note: importance weight is a belief in the current sensor reading given the pose and the map
 	'''
-	def measurement_model_map(self, z_t = [], pose = None, m = None):
+	def update(self, z_t = [], pose = None, m = None):
 		return self.simple_laser_model(z_t, pose, m)
 
 	'''
@@ -44,7 +44,7 @@ class Simple_Laser_Sensor_Model():
 		range_max = z_t.range_max
 		for i in xrange(0, len(z_t.ranges)):
 			#get the expected distance to obstacle
-			expected_distance = m.rayTrace(pose.loc, cur_angle + pose.theta)
+			expected_distance = m.rayTrace(pose.coords, cur_angle + pose.theta)
 			result *= self.getProbReadingGivenDistance(z_t.ranges[i], expected_distance, range_max)
 			cur_angle += inc_angle
 		return result

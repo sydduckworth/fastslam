@@ -1,13 +1,13 @@
 import math
 
 class OccupancyGrid(object):
-	def __init__(self, m, n, step):
+	def __init__(self, dimensions, step):
 		"""
 			Initializes a new grid with dimensions [-m, m], [-n, n]. Each index represents a cell with 
 			size = step. Each index contains a boolean indicating occupancy.
 		"""
 
-		self.dimensions = (m, n)
+		self.dimensions = dimensions
 		self.origin = (int(m/step + 1), int(n/step + 1))
 		if step > 1:
 			raise TypeError("Step size cannot be greater than one.")
