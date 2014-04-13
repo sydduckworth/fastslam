@@ -95,7 +95,7 @@ class OccupancyGrid(object):
 
 class GridList(list):
 	def __init__(self, origin, dimensions, step):
-		self.data = [False for i in range(0, int(2*dimensions[1]/step) + 2)]
+		self.data = [False for i in range(0, int(2*dimensions[1]/step) + 1)]
 		self.dimensions = dimensions
 		self.origin = origin
 		self.step = step
