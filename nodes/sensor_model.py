@@ -1,5 +1,5 @@
 import math
-import prob_utilities as prob_util
+from fastslam_utilities import *
 import scipy.stats
 
 """
@@ -44,11 +44,11 @@ class SensorModelSimple(object):
 	def getProbReadingGivenDistance(self, sensor_distance = 0, expected_distance = 0, max_distance = 0):
 		#alpha is 1.0 divided by the area of the normal curve that is to the right of 0.0
 		#Basically, it is the renormalization constant.
-		alpha = 1.0/(1.0 - prob_util.getCND(0.0, expected_distance, self.stddev))
-	    beta = 1.0 - prob_util.getCND(max_distance, true_distance, stddev) #probability of max range
-    	if (sensor_distance >= max_distance):
-     	    return beta
-		return alpha * prob_util.getProbND(sensor_distance, expected_distance, self.stddev)
+		alpha = 1.0/(1.0 - getCND(0.0, expected_distance, self.stddev))
+		beta = 1.0 - getCND(max_distance, true_distance, stddev) #probability of max range
+		if (sensor_distance >= max_distance):
+	 		return beta
+		return alpha * getProbND(sensor_distance, expected_distance, self.stddev)
 
 	def update_map(self, z_t, pose, m):
 		cur_angle = z_t.angle_min 				#store current angle in radians
@@ -61,7 +61,7 @@ class SensorModelSimple(object):
 			if r != "inf":
 				# For each reading, mark cell being sensed and all cells in an arc around it as occupied
 				init_angle = cur_angle + pose.theta - self.beam_width/2.0
-				end angle = cur_angle + pose.theta + self.beam_width/2.0
+				end_angle = cur_angle + pose.theta + self.beam_width/2.0
 				step = math.atan2(m.step, r) #This ensures that the width of each step is never greater than the grid size
 				while init_angle <= end_angle:
 					point_x = r * math.cos(init_angle) + pose.x

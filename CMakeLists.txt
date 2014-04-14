@@ -6,7 +6,10 @@ project(fastslam)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   rospy
+  roscpp
   std_msgs
+  sensor_msgs
+  nav_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -64,10 +67,12 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+ generate_messages(
+   DEPENDENCIES
+	std_msgs
+	sensor_msgs
+	nav_msgs
+ )
 
 ###################################
 ## catkin specific configuration ##
@@ -81,7 +86,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES fastslam
-#  CATKIN_DEPENDS rospy std_msgs
+  CATKIN_DEPENDS rospy roscpp std_msgs nav_msgs sensor_msgs
 #  DEPENDS system_lib
 )
 

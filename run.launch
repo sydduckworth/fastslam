@@ -1,0 +1,3 @@
+<launch>
+	<node name="filter" pkg="fastslam" type="particlefilter.py" />
+</launch>

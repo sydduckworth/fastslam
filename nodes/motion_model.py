@@ -1,11 +1,9 @@
-import robot_pose
-import prob_utilities
 import math
 import random
 
 from fastslam_utilities import *
 
-class MotionModel(object):
+class MotionModelSimple(object):
 	def __init__(self, stds = (.1, .1, .1)):
 		self.stds = stds
 		# alpha1 = 0.05 meters/meter
