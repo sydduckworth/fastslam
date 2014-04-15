@@ -8,11 +8,11 @@ class OccupancyGrid(object):
 		"""
 
 		self.dimensions = dimensions
-		self.origin = (int(dimensions[0]/step + 1), int(dimensions[1]/step + 1))
+		self.origin = (int(dimensions[0]/step), int(dimensions[1]/step))
 		if step > 1:
 			raise TypeError("Step size cannot be greater than one.")
 		self.step = step
-		self.map = [GridList(self.origin, self.dimensions, self.step) for i in range(0, int(2*dimensions[0]/self.step) + 2)]
+		self.map = [GridList(self.origin, self.dimensions, self.step) for i in range(0, int(2*dimensions[0]/self.step) + 1)]
 
 	def __getitem__(self, key):
 		if abs(int(key)) <= self.dimensions[0]:
@@ -95,7 +95,7 @@ class OccupancyGrid(object):
 
 class GridList(list):
 	def __init__(self, origin, dimensions, step):
-		self.data = [False for i in range(0, int(2*dimensions[1]/step) + 2)]
+		self.data = [None for i in range(0, int(2*dimensions[1]/step) + 1)]
 		self.dimensions = dimensions
 		self.origin = origin
 		self.step = step
