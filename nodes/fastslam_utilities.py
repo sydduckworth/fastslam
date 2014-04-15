@@ -1,7 +1,7 @@
 import math
 
 '''
-This module contains various useful probability utilities.
+This module contains various useful utilities.
 
 '''
 
