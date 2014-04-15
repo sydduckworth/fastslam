@@ -45,34 +45,39 @@ pixel_width_per_cell describes the number of pixels used to describe the width a
 '''
 #TODO: assert .npy file type/error checking
 def npyToMapIMG(fpath, grid_dim, pixel_width_per_cell):
-	np_grid = np.load(fpath)
-	im_height = (2 * grid_dim[0] + 1) * pixel_width_per_cell
-	im_width = (2 * grid_dim[1] + 1) * pixel_width_per_cell
-	image = Image.new("RGB", (im_width, im_height), "white")
-	image_pix = image.load()
-	grid_x = 0
-	x_pixel_cnt = 0
+	np_grid = np.load(fpath) #load grid from npy file
+	im_height = (2 * grid_dim[0] + 1) * pixel_width_per_cell 	#calculate image height
+	im_width = (2 * grid_dim[1] + 1) * pixel_width_per_cell 	#calculate image width
+	image = Image.new("RGB", (im_width, im_height), "white") 	#create new image
+	image_pix = image.load()                                    #load image pixels for manipulation
+	grid_x = 0      #keeps track of current grid x coord
+	x_pixel_cnt = 0 #counts number of pixels in x direction we've drawn 
 	for x in xrange(0, im_width):
-		grid_y = 0
-		y_pixel_cnt = 0
+		grid_y = 0 #keeps track of current grid y coord
+		y_pixel_cnt = 0 #counts number of pixels in y directino we've drawn
 		for y in xrange(0, im_height):
 			if (np_grid[grid_y, grid_x] == None):
+				#if unknown, color grey
 				image_pix[x, y] = (100, 100, 100)
 			elif (np_grid[grid_y, grid_x] == False):
+				#if not occupied, color white
 				image_pix[x, y] = (255, 255, 255)
 			elif (np_grid[grid_y, grid_x] == True):
+				#if occupied, color black
 				image_pix[x, y] = (0, 0, 0)
 			y_pixel_cnt += 1
+			#if the y pixel count equals desired pixel width per cell, reset it and move on to next grid cell
 			if (y_pixel_cnt == pixel_width_per_cell):
 				y_pixel_cnt = 0
 				grid_y += 1
 
 		x_pixel_cnt += 1
+		#if the x pixel count equals desired pixel width per cell, reset it and move on to next grid line
 		if (x_pixel_cnt == pixel_width_per_cell):
 			x_pixel_cnt = 0
 			grid_x += 1
 
-	image.save(str(fpath).replace(".npy", "") + ".jpg")
+	image.save(str(fpath).replace(".npy", "") + ".jpg") #save file out as jpg
 
 
 '''
