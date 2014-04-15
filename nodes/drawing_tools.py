@@ -43,6 +43,7 @@ fpath is the full path and file name of the .npy file to be converted into a .jp
 grid_dim is in format of OccupancyGrid dimensions (m, n) where grid is [-m, m] by [-n, n]
 pixel_width_per_cell describes the number of pixels used to describe the width and height of a grid cell
 '''
+#TODO: assert .npy file type/error checking
 def npyToMapIMG(fpath, grid_dim, pixel_width_per_cell):
 	np_grid = np.load(fpath)
 	im_height = (2 * grid_dim[0] + 1) * pixel_width_per_cell
@@ -71,7 +72,7 @@ def npyToMapIMG(fpath, grid_dim, pixel_width_per_cell):
 			x_pixel_cnt = 0
 			grid_x += 1
 
-	image.save(str(fpath) + ".jpg")
+	image.save(str(fpath).replace(".npy", "") + ".jpg")
 
 
 '''
