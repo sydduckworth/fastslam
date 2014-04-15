@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import random
 import roslib; roslib.load_manifest("fastslam")
 import rospy
