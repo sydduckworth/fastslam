@@ -19,7 +19,7 @@ def getCND(x, mean, stddev):
 	if (z >= 0.0):
 		return 0.5 + 0.5 * math.erf(z / math.sqrt(2.0))
 	else:
-		return 0.5 * erfc(-z / math.sqrt(2.0))
+		return 0.5 * math.erfc(-z / math.sqrt(2.0))
 
 '''
 This function gets the value of the normal distribution at x.
@@ -35,3 +35,7 @@ def wrap_angle(angle):
     while angle <= -math.pi:
         angle = angle + 2*math.pi
     return angle
+
+def euclidean_distance(a,b):
+    d = math.hypot(b[0]-a[0],b[1]-a[1])
+    return d

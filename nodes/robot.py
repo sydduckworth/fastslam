@@ -34,10 +34,10 @@ class GenericBot(Robot):
 		self.motion_model = motion_model
 
 	def sensorModel(self, **kwargs):
-		self.sensor_model.update(**kwargs)
+		return self.sensor_model.update(**kwargs)
 
 	def motionModel(self, **kwargs):
-		self.motion_model.update(**kwargs)
+		return self.motion_model.update(**kwargs)
 
 #Test Code
 """

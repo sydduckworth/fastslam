@@ -11,7 +11,7 @@ class MotionModelSimple(object):
 		# alpha3 = 5 degrees/meter
 		# alpha4 = 0.05 degrees/degree
 
-	def update_motion(old_particle, delta):
+	def update(self, old_particle, delta):
 		"""# break up old particle
 		old_x = old_particle.pose[0]
 		old_y = old_particle.pose[1]

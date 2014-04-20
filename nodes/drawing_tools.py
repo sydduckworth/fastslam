@@ -44,10 +44,10 @@ grid_dim is in format of OccupancyGrid dimensions (m, n) where grid is [-m, m] b
 pixel_width_per_cell describes the number of pixels used to describe the width and height of a grid cell
 '''
 #TODO: assert .npy file type/error checking
-def npyToMapIMG(fpath, grid_dim, pixel_width_per_cell):
+def npyToMapIMG(fpath, grid_dim, step, pixel_width_per_cell):
 	np_grid = np.load(fpath) #load grid from npy file
-	im_height = (2 * grid_dim[0] + 1) * pixel_width_per_cell 	#calculate image height
-	im_width = (2 * grid_dim[1] + 1) * pixel_width_per_cell 	#calculate image width
+	im_height = int((2 * grid_dim[0] / step + 1) * pixel_width_per_cell) 	#calculate image height
+	im_width = int((2 * grid_dim[1] / step + 1) * pixel_width_per_cell) 	#calculate image width
 	image = Image.new("RGB", (im_width, im_height), "white") 	#create new image
 	image_pix = image.load()                                    #load image pixels for manipulation
 	grid_x = 0      #keeps track of current grid x coord
@@ -84,8 +84,8 @@ def npyToMapIMG(fpath, grid_dim, pixel_width_per_cell):
 test code to make sure above functions work
 '''
 if __name__ == "__main__":
-	test_grid = occupancygrid.OccupancyGrid((15, 10), 1)
+	test_grid = occupancygrid.OccupancyGrid((15, 10), .5)
 	test_grid[0][0] = False
 	test_grid[15][5] = True
 	gridToNpyFile(test_grid)
-	npyToMapIMG("./default/default.npy", (15, 10), 50)
+	npyToMapIMG("./default/default.npy", (15, 10), .5, 5)

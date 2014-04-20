@@ -5,6 +5,7 @@ import roslib; roslib.load_manifest("fastslam")
 import rospy
 from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import Odometry
+from tf.transformations import euler_from_quaternion
 
 from robot_pose import *
 from occupancygrid import *
@@ -12,6 +13,7 @@ from motion_model import *
 from sensor_model import *
 from particle import *
 from robot import *
+from drawing_tools import *
 
 class ParticleFilter(object):
     """
@@ -20,6 +22,7 @@ class ParticleFilter(object):
     """
     pose_noise = 1.0 #Std of initial pose noise
     percent_random = .1 #Number of random particles to add for each resampling
+    iteration = 0 #Keeps track of the number of times that the particles have been resampled.
     def __init__(self, num_particles, robot, dimensions, step):
         self.num_particles = num_particles
         self.dimensions = dimensions
@@ -52,14 +55,17 @@ class ParticleFilter(object):
         #Wait until the first odom data is received
         while not self.odom_received and not rospy.is_shutdown():
             pass
+        rospy.loginfo("First odom message received")
 
         self.prev_pose = self.current_pose
         #Initialize particles around guessed starting location
         self.init_particles(self.num_particles)
+        rospy.loginfo("Done initializing particles")
         while not rospy.is_shutdown():
             #Wait until odom data is received, then update all the particles
             if self.odom_received:
                 self.update_particles()
+                self.resample_particles()
                 self.odom_received = False
 
 
@@ -67,9 +73,17 @@ class ParticleFilter(object):
         random_particles = int(self.num_particles * ParticleFilter.percent_random)
         new_particles = []
         total_weight = 0
+        max_particle = 0
 
-        for p in self.p_set:
-            total_weight += p.weight
+        for p in range(0, len(self.p_set)):
+            total_weight += self.p_set[p].weight
+            if self.p_set[p].weight > self.p_set[max_particle].weight:
+                max_particle = p
+
+        gridToNpyFile(self.p_set[max_particle].grid, "./maps", "map" + str(ParticleFilter.iteration))
+        ParticleFilter.iteration += 1
+        rospy.loginfo(str(ParticleFilter.iteration))
+
         #This loop is a mapping between the particles weights and their indices.
         #This allows us to sample the particles with frequency proportional to weight.
         for i in xrange(0, len(self.p_set) - random_particles):
@@ -77,7 +91,7 @@ class ParticleFilter(object):
             tw = 0
             k = 0
             while tw < r:
-                tw = tw + particles[k].w
+                tw = tw + self.p_set[k].weight
                 k = k + 1
             newP = Particle(self.p_set[k-1].grid, self.p_set[k-1].pose, self.p_set[k-1].weight)
             new_particles.append(newP)
@@ -96,10 +110,13 @@ class ParticleFilter(object):
         self.get_move_delta()
         for p in self.p_set:
             #Update the particle's position using the motion model
+            #rospy.loginfo("Running motion model")
             p.pose.x, p.pose.y, p.pose.theta = self.robot.motionModel(old_particle = p, delta = self.pose_delta)
             #Weight the particle based on how closely it matches the sensor data
+            #rospy.loginfo("Running sensor model")
             p.weight = self.robot.sensorModel(z_t = self.current_scan, pose = p.pose, m = p.grid)
             #Update the particle's map using the sensor model
+            #rospy.loginfo("Updating map")
             p.grid = self.robot.sensor_model.update_map(self.current_scan, p.pose, p.grid)
 
     def init_particles(self, num_particles):
@@ -111,9 +128,8 @@ class ParticleFilter(object):
             new_x = random.gauss(self.current_pose.x, ParticleFilter.pose_noise)
             new_y = random.gauss(self.current_pose.y, ParticleFilter.pose_noise)
             new_theta = new_x = random.gauss(self.current_pose.theta, ParticleFilter.pose_noise/2.0)
-            new_pose = RobotPose((new_x, new_y), new_theta)
+            new_pose = RobotPose(new_x, new_y, new_theta)
             new_grid = OccupancyGrid(self.dimensions, self.step)
-
             p_temp = Particle(new_grid, new_pose, 1.0/num_particles)
             self.p_set.append(p_temp)
 
@@ -123,13 +139,14 @@ class ParticleFilter(object):
             then updates the previous pose
         """
         dx = self.current_pose.x - self.prev_pose.x
-        dy = self.current_pose.y - self.prev_y
+        dy = self.current_pose.y - self.prev_pose.y
         dtheta = self.current_pose.theta - self.prev_pose.theta
         self.pose_delta = (dx, dy, dtheta)
         self.prev_pose = self.current_pose
 
 if __name__ == "__main__":
-    particles = 1000 #Number of particles to maintain
+    rospy.loginfo("Starting")
+    particles = 10 #Number of particles to maintain
     map_size = (15, 15) #Map dimensions [-m, m] x [-n, n] in meters
     step_size = .1 #Step size in meters. Must be <= 1
     try:
