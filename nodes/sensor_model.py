@@ -55,12 +55,12 @@ class SensorModelSimple(object):
 		return alpha * getND(sensor_distance, expected_distance, self.stddev)
 
 	def update_map(self, z_t, pose, m):
-		step = 50
+		scan_step = 50
 		cur_angle = z_t.angle_min 				#store current angle in radians
-		inc_angle = z_t.angle_increment * step		#angle increment between scans in radians
+		inc_angle = z_t.angle_increment * scan_step		#angle increment between scans in radians
 		range_max = z_t.range_max
 
-		for r in xrange(0, len(z_t.ranges), step):
+		for r in xrange(0, len(z_t.ranges), scan_step):
 			#Discard any infinite readings
 			if not math.isnan(z_t.ranges[r]) and not math.isinf(z_t.ranges[r]):
 				# For each reading, mark cell being sensed and all cells in an arc around it as occupied

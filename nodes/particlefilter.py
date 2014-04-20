@@ -99,7 +99,7 @@ class ParticleFilter(object):
         #This loop samples a percentage of the particles totally at random
         #This is to attempt to avoid sample starvation.
         for i in xrange(0, random_particles):
-            r = random.randint(0, len(self.p_set))
+            r = random.randint(0, len(self.p_set)-1)
             newP =  Particle(self.p_set[r].grid, self.p_set[r].pose, self.p_set[r].weight)
             new_particles.append(newP)
 
