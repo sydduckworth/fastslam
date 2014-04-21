@@ -29,6 +29,7 @@ def gridToNpyFile(occupancy_grid, robot_pose, dest_dir = "./default", fname = "d
 	robo_thresh = 0.1
 	robot_indicator = -1 #this is used to distinguish robot location in grid
 	i = -1 * dimensions[0]
+	print("robot_pose: " + str((robot_pose.x, robot_pose.y, robot_pose.theta)))
 	while i <= dimensions[0]:
 		array.append([])
 		j = -1 * dimensions[1]
@@ -62,7 +63,7 @@ def npyToMapIMG(fpath, grid_dim, step, pixel_width_per_cell):
 	for x in xrange(0, im_width):
 		grid_y = 0 #keeps track of current grid y coord
 		y_pixel_cnt = 0 #counts number of pixels in y directino we've drawn
-		for y in xrange(0, im_height):
+		for y in xrange(im_height - 1, 0, -1):
 			if (np_grid[grid_y, grid_x] == None):
 				#if unknown, color grey
 				image_pix[x, y] = (100, 100, 100)
