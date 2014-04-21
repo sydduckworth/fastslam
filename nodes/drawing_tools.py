@@ -34,8 +34,8 @@ def gridToNpyFile(occupancy_grid, robot_pose, dest_dir = "./default", fname = "d
 		j = -1 * dimensions[1]
 		while j <= dimensions[1]:
 			#want to indicate robot's location on map
-			check_x = (robot_pose.x <= i + robo_thresh) and (robot_pose.x >= i - robo_thresh)
-			check_y = (robot_pose.y <= j + robo_thresh) and (robot_pose.y >= j - robo_thresh)
+			check_x = (robot_pose.x <= j + robo_thresh) and (robot_pose.x >= j - robo_thresh)
+			check_y = (robot_pose.y <= i + robo_thresh) and (robot_pose.y >= i - robo_thresh)
 			if (check_x and check_y):
 				array[len(array) - 1].append(robot_indicator)
 			else:

@@ -32,6 +32,9 @@ class ParticleFilter(object):
         self.p_set = []
         self.current_scan = LaserScan()
         self.current_pose = RobotPose()
+        self.recent_scan = LaserScan()
+        self.recent_pose = RobotPose()
+
         self.prev_pose = RobotPose()
         self.pose_delta = (0, 0, 0)
         self.robot = robot
@@ -41,13 +44,14 @@ class ParticleFilter(object):
         rospy.Subscriber("/odom", Odometry, self.odom_callback)
 
     def laser_callback(self, data):
-        self.current_scan = data
+        self.recent_scan = data
+        #print("# of Scans: " + str(len(data.ranges))) #512 scans for our laser range finder!
 
     def odom_callback(self, data):
         [r,p,yaw] = euler_from_quaternion([data.pose.pose.orientation.x,data.pose.pose.orientation.y,data.pose.pose.orientation.z,data.pose.pose.orientation.w])
-        self.current_pose.x = data.pose.pose.position.x
-        self.current_pose.y = data.pose.pose.position.y
-        self.current_pose.theta = yaw
+        self.recent_pose.x = data.pose.pose.position.x
+        self.recent_pose.y = data.pose.pose.position.y
+        self.recent_pose.theta = yaw
         self.odom_received = True
 
 
@@ -64,6 +68,9 @@ class ParticleFilter(object):
         while not rospy.is_shutdown():
             #Wait until odom data is received, then update all the particles
             if self.odom_received:
+                #update the current scan and pose
+                self.current_pose = self.recent_pose
+                self.current_scan = self.recent_scan
                 self.update_particles()
                 self.resample_particles()
                 self.odom_received = False
@@ -146,11 +153,11 @@ class ParticleFilter(object):
 
 if __name__ == "__main__":
     rospy.loginfo("Starting")
-    particles = 10 #Number of particles to maintain
+    particles = 20 #Number of particles to maintain
     map_size = (15, 15) #Map dimensions [-m, m] x [-n, n] in meters
     step_size = .1 #Step size in meters. Must be <= 1
     try:
-        turtlebot_model = GenericBot(SensorModelSimple(), MotionModelSimple())
+        turtlebot_model = GenericBot(SensorModelSimple(stddev = 1.5, beam_width = .005), MotionModelSimple())
         pfilter = ParticleFilter(particles, turtlebot_model, map_size, step_size)
     except Exception as er:
         rospy.logerr(er)
