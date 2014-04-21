@@ -80,7 +80,7 @@ class ParticleFilter(object):
             if self.p_set[p].weight > self.p_set[max_particle].weight:
                 max_particle = p
 
-        gridToNpyFile(self.p_set[max_particle].grid, "./maps", "map" + str(ParticleFilter.iteration))
+        gridToNpyFile(self.p_set[max_particle].grid, self.current_pose, "./maps", "map" + str(ParticleFilter.iteration))
         ParticleFilter.iteration += 1
         rospy.loginfo(str(ParticleFilter.iteration))
 
