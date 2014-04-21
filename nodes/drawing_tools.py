@@ -20,19 +20,27 @@ array out to a .npy file in the dest_dir directory with the filename provided.
 * Note: fname should not contain a file extension.
 * Note: Format of dest_dir and fname is critical to successful file saving
 '''
-def gridToNpyFile(occupancy_grid, dest_dir = "./default", fname = "default"):
+def gridToNpyFile(occupancy_grid, robot_pose, dest_dir = "./default", fname = "default"):
 	#ensure the existance of given directory to store files
 	ensure_dir(dest_dir)
 	dimensions = occupancy_grid.dimensions 
 	step = occupancy_grid.step
 	array = [] #easiest to append grid cells to regular python array then convert this array to numpy array
-
+	robo_thresh = 0.1
+	robot_indicator = -1 #this is used to distinguish robot location in grid
 	i = -1 * dimensions[0]
+	print("robot_pose: " + str((robot_pose.x, robot_pose.y, robot_pose.theta)))
 	while i <= dimensions[0]:
 		array.append([])
 		j = -1 * dimensions[1]
 		while j <= dimensions[1]:
-			array[len(array) - 1].append(occupancy_grid[i][j])
+			#want to indicate robot's location on map
+			check_x = (robot_pose.x <= j + robo_thresh) and (robot_pose.x >= j - robo_thresh)
+			check_y = (robot_pose.y <= i + robo_thresh) and (robot_pose.y >= i - robo_thresh)
+			if (check_x and check_y):
+				array[len(array) - 1].append(robot_indicator)
+			else:
+				array[len(array) - 1].append(occupancy_grid[i][j])
 			j += step #increment j based on grid step
 		i += step #increment i based on grid step
 
@@ -55,7 +63,7 @@ def npyToMapIMG(fpath, grid_dim, step, pixel_width_per_cell):
 	for x in xrange(0, im_width):
 		grid_y = 0 #keeps track of current grid y coord
 		y_pixel_cnt = 0 #counts number of pixels in y directino we've drawn
-		for y in xrange(0, im_height):
+		for y in xrange(im_height - 1, 0, -1):
 			if (np_grid[grid_y, grid_x] == None):
 				#if unknown, color grey
 				image_pix[x, y] = (100, 100, 100)
@@ -65,6 +73,10 @@ def npyToMapIMG(fpath, grid_dim, step, pixel_width_per_cell):
 			elif (np_grid[grid_y, grid_x] == True):
 				#if occupied, color black
 				image_pix[x, y] = (0, 0, 0)
+			elif (np_grid[grid_y, grid_x] == -1):
+				#if robot, color red
+				image_pix[x, y] = (255, 0, 0)
+
 			y_pixel_cnt += 1
 			#if the y pixel count equals desired pixel width per cell, reset it and move on to next grid cell
 			if (y_pixel_cnt == pixel_width_per_cell):
