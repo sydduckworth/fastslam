@@ -46,8 +46,8 @@ pixel_width_per_cell describes the number of pixels used to describe the width a
 #TODO: assert .npy file type/error checking
 def npyToMapIMG(fpath, grid_dim, step, pixel_width_per_cell):
 	np_grid = np.load(fpath) #load grid from npy file
-	im_height = int((2 * grid_dim[0] / step + 1) * pixel_width_per_cell) 	#calculate image height
-	im_width = int((2 * grid_dim[1] / step + 1) * pixel_width_per_cell) 	#calculate image width
+	im_height = int((2 * grid_dim[0] / step ) * pixel_width_per_cell) 	#calculate image height
+	im_width = int((2 * grid_dim[1] / step ) * pixel_width_per_cell) 	#calculate image width
 	image = Image.new("RGB", (im_width, im_height), "white") 	#create new image
 	image_pix = image.load()                                    #load image pixels for manipulation
 	grid_x = 0      #keeps track of current grid x coord

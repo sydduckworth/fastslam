@@ -1,4 +1,5 @@
 import math
+import random
 from fastslam_utilities import *
 import scipy.stats
 
@@ -30,18 +31,17 @@ class SensorModelSimple(object):
 	'''
 	def update(self, z_t, pose, m):
 		#TODO: probably don't want to use all range scans
+		scan_step = 50
 		result = 1.0
 		cur_angle = z_t.angle_min 				#store current angle in radians
-		inc_angle = z_t.angle_increment 		#angle increment between scans in radians
+		inc_angle = z_t.angle_increment * scan_step 		#angle increment between scans in radians
 		range_max = z_t.range_max
-		for i in xrange(0, len(z_t.ranges)):
+		for i in xrange(0, len(z_t.ranges), scan_step):
 			object_coords = m.rayTrace((pose.x, pose.y), cur_angle + pose.theta)
 			#get the expected distance to obstacle
-			if not object_coords:
-				expected_distance = range_max
-			else:
+			if object_coords:
 				expected_distance = euclidean_distance(object_coords, (pose.x, pose.y))
-			result *= self.getProbReadingGivenDistance(z_t.ranges[i], expected_distance, range_max)
+				result *= self.getProbReadingGivenDistance(z_t.ranges[i], expected_distance, range_max)
 			cur_angle += inc_angle
 		return result
 

@@ -144,11 +144,15 @@ class ParticleFilter(object):
         self.pose_delta = (dx, dy, dtheta)
         self.prev_pose = self.current_pose
 
+    def output_maps(self):
+        for i in range(0, self.iteration):
+            drawing_tools.npyToMapIMG("./maps/map" + str(i) + ".npy", self.dimensions, self.step, 5)
+
 if __name__ == "__main__":
     rospy.loginfo("Starting")
     particles = 10 #Number of particles to maintain
     map_size = (15, 15) #Map dimensions [-m, m] x [-n, n] in meters
-    step_size = .1 #Step size in meters. Must be <= 1
+    step_size = .3 #Step size in meters. Must be <= 1
     try:
         turtlebot_model = GenericBot(SensorModelSimple(), MotionModelSimple())
         pfilter = ParticleFilter(particles, turtlebot_model, map_size, step_size)
