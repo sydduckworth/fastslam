@@ -40,7 +40,7 @@ class ParticleFilter(object):
         self.robot = robot
         
         rospy.init_node("filter")
-        rospy.Subscriber("/scan", LaserScan, self.laser_callback)
+        rospy.Subscriber("/base_scan", LaserScan, self.laser_callback)
         rospy.Subscriber("/odom", Odometry, self.odom_callback)
 
     def laser_callback(self, data):
@@ -158,10 +158,10 @@ class ParticleFilter(object):
 if __name__ == "__main__":
     rospy.loginfo("Starting")
     particles = 20 #Number of particles to maintain
-    map_size = (15, 15) #Map dimensions [-m, m] x [-n, n] in meters
+    map_size = (20, 20) #Map dimensions [-m, m] x [-n, n] in meters
     step_size = .3 #Step size in meters. Must be <= 1
     try:
-        turtlebot_model = GenericBot(SensorModelSimple(stddev = 1.5, beam_width = .005), MotionModelSimple())
+        turtlebot_model = GenericBot(SensorModelSimple(stddev = 1.5), MotionModelSimple())
         pfilter = ParticleFilter(particles, turtlebot_model, map_size, step_size)
     except Exception as er:
         rospy.logerr(er)

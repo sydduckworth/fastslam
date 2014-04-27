@@ -1,4 +1,5 @@
 import math
+import numpy
 
 class OccupancyGrid(object):
 	def __init__(self, dimensions, step):
@@ -20,6 +21,10 @@ class OccupancyGrid(object):
 			return self.map[index]
 		else:
 			raise IndexError
+
+	def __iter__(self):
+		for item in self.map:
+			yield item
 
 	def __contains__(self, item):
 		return (abs(item[0]) <= self.dimensions[0]) and (abs(item[1]) <= self.dimensions[1])
@@ -93,6 +98,11 @@ class OccupancyGrid(object):
 			next_coords1 = (coords1[0] + math.cos(angle)*self.step, coords1[1] + math.sin(angle)*self.step)
 			return self._fillToRecursive(next_coords1, coords2, angle)
 
+	def fillRect(self, coords, width, height):
+		for x in numpy.linspace(coords[0] - .5 * width, coords[0] + .5 * width, num = (width/self.step)):
+			for y in numpy.linspace(coords[1] - .5 * height, coords[1] + .5 * height, num = (height/self.step)):
+				self[x][y] = True
+
 class GridList(list):
 	def __init__(self, origin, dimensions, step):
 		self.data = [None for i in range(0, int(2*dimensions[1]/step) + 1)]
@@ -110,9 +120,13 @@ class GridList(list):
 	def __setitem__(self, key, item):
 		if abs(int(key)) <= self.dimensions[1]:
 			index = int(key/self.step) + self.origin[1]
-			self.data[index] = bool(item)
+			self.data[index] = item
 		else:
 			raise IndexError
 
 	def __contains__(self, item):
 		return abs(int(item[1])) <= self.dimensions[1]
+
+	def __iter__(self):
+		for item in self.data:
+			yield item
