@@ -27,6 +27,8 @@ class Mapper(object):
 		self.map = OccupancyGrid(self.dimensions, self.step)
 		self.current_scan = LaserScan()
 		self.current_pose = RobotPose()
+		self.new_scan = LaserScan()
+		self.new_pose = RobotPose()
 		self.sensor_model = SensorModelSimple()
 		
 		rospy.init_node("mapper")
@@ -35,26 +37,28 @@ class Mapper(object):
 		atexit.register(self.output_maps)
 
 	def laser_callback(self, data):
-		self.current_scan = data
+		self.new_scan = data
 		#print("# of Scans: " + str(len(data.ranges))) #512 scans for our laser range finder!
 
 	def odom_callback(self, data):
 		[r,p,yaw] = euler_from_quaternion([data.pose.pose.orientation.x,data.pose.pose.orientation.y,data.pose.pose.orientation.z,data.pose.pose.orientation.w])
-		self.current_pose.x = data.pose.pose.position.x
-		self.current_pose.y = data.pose.pose.position.y
-		self.current_pose.theta = yaw
+		self.new_pose.x = data.pose.pose.position.x
+		self.new_pose.y = data.pose.pose.position.y
+		self.new_pose.theta = yaw
 
 
 	def run(self):
 		rospy.loginfo("Done initializing particles")
 		while not rospy.is_shutdown():
 			self.sensor_model.update_map(self.current_scan, self.current_pose, self.map)
+			self.current_pose = self.new_pose
+			self.current_scan = self.new_scan
 			gridToNpyFile(self.map, self.current_pose, "./maps", "map" + str(Mapper.iteration))
 			Mapper.iteration += 1
 			rospy.loginfo(str(Mapper.iteration))
 
 	def output_maps(self):
-		for i in range(0, self.iteration, 5):
+		for i in range(0, self.iteration, 1):
 			print("Generating map " + str(i) + "...")
 			npyToMapIMG("./maps/map" + str(i) + ".npy", self.dimensions, self.step, 5)
 

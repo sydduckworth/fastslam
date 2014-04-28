@@ -1,5 +1,6 @@
 import math
 import numpy
+from fastslam_utilities import *
 
 class OccupancyGrid(object):
 	def __init__(self, dimensions, step):
@@ -64,16 +65,29 @@ class OccupancyGrid(object):
 			return False
 		else:
 			angle = math.atan2((coords2[1] - coords1[1]), (coords2[0] - coords1[0]))
-			return self._clearToRecursive(coords1, coords2, angle)
+			return self._clearToLoop(coords1, coords2, angle)
 
+	def _clearToLoop(self, coords1, coords2, angle):
+		cur_coords = coords1
+		x_step = math.cos(angle)*self.step
+		y_step = math.sin(angle)*self.step
+		dist = euclidean_distance(coords1, coords2)
+		while euclidean_distance(cur_coords, coords1) < dist:
+			if coords1 not in self:
+				return False
+			else:
+				self[cur_coords[0]][cur_coords[1]] = False
+				cur_coords = (cur_coords[0] + x_step, cur_coords[1] + y_step)
+		return True
 
 	def _clearToRecursive(self, coords1, coords2, angle):
 		if coords1 not in self:
 			return False
-		elif self.map2grid(coords1) == self.map2grid(coords2):
+		elif self.map2grid(coords1) == self.map2grid(coords2) or self[coords1[0]][coords1[1]] == True:
 			return True
 		else:
-			self[coords1[0]][coords1[1]] = False
+			if self[coords1[0]][coords1[1]] != True:
+				self[coords1[0]][coords1[1]] = False
 			next_coords1 = (coords1[0] + math.cos(angle)*self.step, coords1[1] + math.sin(angle)*self.step)
 			return self._clearToRecursive(next_coords1, coords2, angle)
 

@@ -71,7 +71,7 @@ class SensorModelSimple(object):
 					point_y = z_t.ranges[r] * math.sin(init_angle) + pose.y
 					#Clear all points up to the sensed point, then set the sensed point to occupied
 					m.clearTo((pose.x, pose.y), (point_x, point_y))
-					if z_t.ranges[r] < 8:
+					if z_t.intensities[r] == 1.0:
 						m[point_x][point_y] = True
 					init_angle += step
 
