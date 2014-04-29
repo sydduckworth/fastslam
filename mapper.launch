@@ -1,0 +1,3 @@
+<launch>
+	<node pkg="stage_ros" type="stageros" name="stageros" args="$(find fastslam)/world/msu_lab5_1.world" respawn="false" output="screen" />
+</launch>

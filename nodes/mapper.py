@@ -65,9 +65,12 @@ class Mapper(object):
 
 
 	def output_maps(self):
-		for i in range(0, self.iteration, 10):
+		"""for i in range(0, self.iteration, 10):
 			print("Generating map " + str(i) + "...")
-			npyToMapIMG("./maps/map" + str(i) + ".npy", self.dimensions, self.step, 5)
+			npyToMapIMG("./maps/map" + str(i) + ".npy", self.dimensions, self.step, 5)"""
+
+		print("Generating final map...")
+		npyToMapIMG("./maps/map" + str(self.iteration) + ".npy", self.dimensions, self.step, 5)
 
 if __name__ == "__main__":
 	rospy.loginfo("Starting")

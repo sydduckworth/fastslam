@@ -60,14 +60,8 @@ class ParticleFilter(object):
 
 
     def run(self):
-        #Wait until the first odom data is received
-        while not self.odom_received and not rospy.is_shutdown():
-            pass
-        rospy.loginfo("First odom message received")
-        self.current_pose = self.recent_pose
-        self.prev_pose = self.current_pose
         #Initialize particles around guessed starting location
-        self.init_particles(self.num_particles)
+        self.init_particles(self.num_particles, RobotPose())
         rospy.loginfo("Done initializing particles")
         while not rospy.is_shutdown():
             #Wait until odom data is received, then update all the particles
@@ -132,15 +126,15 @@ class ParticleFilter(object):
             #rospy.loginfo("Updating map")
             p.grid = self.robot.sensor_model.update_map(self.current_scan, p.pose, p.grid)
 
-    def init_particles(self, num_particles):
+    def init_particles(self, num_particles, ref_pose):
         """
             Initializes a set of particles. All particles have a starting pose equal to the 
             current odom reading plus random noise
         """
         for i in xrange(0, num_particles):
-            new_x = random.gauss(self.current_pose.x, ParticleFilter.pose_noise)
-            new_y = random.gauss(self.current_pose.y, ParticleFilter.pose_noise)
-            new_theta = random.gauss(self.current_pose.theta, ParticleFilter.pose_noise/2.0)
+            new_x = random.gauss(ref_pose.x, ParticleFilter.pose_noise)
+            new_y = random.gauss(ref_pose.y, ParticleFilter.pose_noise)
+            new_theta = random.gauss(ref_pose.theta, ParticleFilter.pose_noise/2.0)
             new_pose = RobotPose(new_x, new_y, new_theta)
             new_grid = OccupancyGrid(self.dimensions, self.step)
             p_temp = Particle(new_grid, new_pose, 1.0/num_particles)
@@ -169,11 +163,11 @@ class ParticleFilter(object):
 
 if __name__ == "__main__":
     rospy.loginfo("Starting")
-    particles = 20 #Number of particles to maintain
+    particles = 50 #Number of particles to maintain
     map_size = (20, 20) #Map dimensions [-m, m] x [-n, n] in meters
-    step_size = .2 #Step size in meters. Must be <= 1
+    step_size = .3 #Step size in meters. Must be <= 1
     try:
-        turtlebot_model = GenericBot(SensorModelNarrow(stddev = 1.5), MotionModelSimple())
+        turtlebot_model = GenericBot(SensorModelNarrow(), MotionModelSimple())
         pfilter = ParticleFilter(particles, turtlebot_model, map_size, step_size)
     except Exception as er:
         rospy.logerr(er)

@@ -99,8 +99,20 @@ class OccupancyGrid(object):
 			return False
 		else:
 			angle = math.atan2((coords2[1] - coords1[1]), (coords2[0] - coords1[0]))
-			return self._fillToRecursive(coords1, coords2, angle)
+			return self._fillToLoop(coords1, coords2, angle)
 
+	def _fillToLoop(self, coords1, coords2, angle):
+		cur_coords = coords1
+		x_step = math.cos(angle)*self.step
+		y_step = math.sin(angle)*self.step
+		dist = euclidean_distance(coords1, coords2)
+		while euclidean_distance(cur_coords, coords1) < dist:
+			if coords1 not in self:
+				return False
+			else:
+				self[cur_coords[0]][cur_coords[1]] = True
+				cur_coords = (cur_coords[0] + x_step, cur_coords[1] + y_step)
+		return True
 
 	def _fillToRecursive(self, coords1, coords2, angle):
 		if coords1 not in self:
@@ -116,6 +128,7 @@ class OccupancyGrid(object):
 		for x in numpy.linspace(coords[0] - .5 * width, coords[0] + .5 * width, num = (width/(.9 * self.step))):
 			for y in numpy.linspace(coords[1] - .5 * height, coords[1] + .5 * height, num = (height/(.9 * self.step))):
 				self[x][y] = True
+
 
 class GridList(list):
 	def __init__(self, origin, dimensions, step):

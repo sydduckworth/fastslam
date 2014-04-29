@@ -17,9 +17,9 @@ Key assumptions:
 
 class SensorModelSimple(object):
 
-	def __init__(self, stddev = 2.5):
+	def __init__(self, stddev = 2.5, object_thickness = 1.0):
 		self.stddev = stddev
-
+		self.object_thickness = object_thickness
 	'''
 	update
 		params:
@@ -74,7 +74,10 @@ class SensorModelSimple(object):
 					m.clearTo((pose.x, pose.y), (point_x, point_y))
 					if z_t.intensities[r] == 1.0:
 						#m.fillRect((point_x, point_y), .6, .6)
-						m[point_x][point_y] = True
+						#m[point_x][point_y] = True
+						obj_x = self.object_thickness * math.cos(init_angle) + point_x
+						obj_y = self.object_thickness * math.sin(init_angle) + point_y
+						m.fillTo((point_x, point_y), (obj_x, obj_y))
 					init_angle += step
 
 			cur_angle += inc_angle
@@ -83,8 +86,9 @@ class SensorModelSimple(object):
 
 class SensorModelNarrow(object):
 
-	def __init__(self, stddev = 2.5):
+	def __init__(self, stddev = 2.5, object_thickness = 1.0):
 		self.stddev = stddev
+		self.object_thickness = object_thickness
 
 	'''
 	update
@@ -137,7 +141,10 @@ class SensorModelNarrow(object):
 				m.clearTo((pose.x, pose.y), (point_x, point_y))
 				if z_t.intensities[r] == 1.0:
 					#m.fillRect((point_x, point_y), .6, .6)
-					m[point_x][point_y] = True
+					#m[point_x][point_y] = True
+					obj_x = self.object_thickness * math.cos(cur_angle) + point_x
+					obj_y = self.object_thickness * math.sin(cur_angle) + point_y
+					m.fillTo((point_x, point_y), (obj_x, obj_y))
 			cur_angle += inc_angle
 		return m
 
