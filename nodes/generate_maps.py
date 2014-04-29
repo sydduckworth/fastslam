@@ -14,5 +14,5 @@ if __name__ == "__main__":
 	if __name__ == "__main__":
 		for i in range(first_map, last_map):
 			print("Generating map " + str(i) + "...")
-			drawing_tools.npyToMapIMG("./maps/map" + str(i) + ".npy", (20, 20), .3, 5)
+			drawing_tools.npyToMapIMG("./maps/map" + str(i) + ".npy", (20, 20), .2, 5)
 		print("Done")

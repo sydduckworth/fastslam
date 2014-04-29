@@ -113,8 +113,8 @@ class OccupancyGrid(object):
 			return self._fillToRecursive(next_coords1, coords2, angle)
 
 	def fillRect(self, coords, width, height):
-		for x in numpy.linspace(coords[0] - .5 * width, coords[0] + .5 * width, num = (width/self.step)):
-			for y in numpy.linspace(coords[1] - .5 * height, coords[1] + .5 * height, num = (height/self.step)):
+		for x in numpy.linspace(coords[0] - .5 * width, coords[0] + .5 * width, num = (width/(.9 * self.step))):
+			for y in numpy.linspace(coords[1] - .5 * height, coords[1] + .5 * height, num = (height/(.9 * self.step))):
 				self[x][y] = True
 
 class GridList(list):

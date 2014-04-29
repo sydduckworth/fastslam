@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import random
+import atexit
 import roslib; roslib.load_manifest("fastslam")
 import rospy
 from sensor_msgs.msg import LaserScan
@@ -28,6 +29,7 @@ class ParticleFilter(object):
         self.dimensions = dimensions
         self.step = step
         self.odom_received = False
+        self.scan_received = False
 
         self.p_set = []
         self.current_scan = LaserScan()
@@ -42,9 +44,11 @@ class ParticleFilter(object):
         rospy.init_node("filter")
         rospy.Subscriber("/base_scan", LaserScan, self.laser_callback)
         rospy.Subscriber("/odom", Odometry, self.odom_callback)
+        atexit.register(self.output_maps)
 
     def laser_callback(self, data):
         self.recent_scan = data
+        self.scan_received = True
         #print("# of Scans: " + str(len(data.ranges))) #512 scans for our laser range finder!
 
     def odom_callback(self, data):
@@ -60,20 +64,21 @@ class ParticleFilter(object):
         while not self.odom_received and not rospy.is_shutdown():
             pass
         rospy.loginfo("First odom message received")
-
+        self.current_pose = self.recent_pose
         self.prev_pose = self.current_pose
         #Initialize particles around guessed starting location
         self.init_particles(self.num_particles)
         rospy.loginfo("Done initializing particles")
         while not rospy.is_shutdown():
             #Wait until odom data is received, then update all the particles
-            if self.odom_received:
+            if self.odom_received and self.scan_received:
                 #update the current scan and pose
                 self.current_pose = self.recent_pose
                 self.current_scan = self.recent_scan
                 self.update_particles()
                 self.resample_particles()
                 self.odom_received = False
+                self.scan_received = False
 
 
     def resample_particles(self):
@@ -86,8 +91,8 @@ class ParticleFilter(object):
             total_weight += self.p_set[p].weight
             if self.p_set[p].weight > self.p_set[max_particle].weight:
                 max_particle = p
-
-        gridToNpyFile(self.p_set[max_particle].grid, self.current_pose, "./maps", "map" + str(ParticleFilter.iteration))
+        print(self.p_set[max_particle].weight)
+        gridToNpyFile(self.p_set[max_particle].grid, self.p_set[max_particle].pose, "./maps", "map" + str(ParticleFilter.iteration))
         ParticleFilter.iteration += 1
         rospy.loginfo(str(ParticleFilter.iteration))
 
@@ -115,6 +120,7 @@ class ParticleFilter(object):
 
     def update_particles(self):
         self.get_move_delta()
+        self.prev_pose = self.current_pose
         for p in self.p_set:
             #Update the particle's position using the motion model
             #rospy.loginfo("Running motion model")
@@ -134,7 +140,7 @@ class ParticleFilter(object):
         for i in xrange(0, num_particles):
             new_x = random.gauss(self.current_pose.x, ParticleFilter.pose_noise)
             new_y = random.gauss(self.current_pose.y, ParticleFilter.pose_noise)
-            new_theta = new_x = random.gauss(self.current_pose.theta, ParticleFilter.pose_noise/2.0)
+            new_theta = random.gauss(self.current_pose.theta, ParticleFilter.pose_noise/2.0)
             new_pose = RobotPose(new_x, new_y, new_theta)
             new_grid = OccupancyGrid(self.dimensions, self.step)
             p_temp = Particle(new_grid, new_pose, 1.0/num_particles)
@@ -152,16 +158,22 @@ class ParticleFilter(object):
         self.prev_pose = self.current_pose
 
     def output_maps(self):
-        for i in range(0, self.iteration):
-            drawing_tools.npyToMapIMG("./maps/map" + str(i) + ".npy", self.dimensions, self.step, 5)
+        for i in range(0, self.iteration, 5):
+            print("Generating map " + str(i) + "...")
+            npyToMapIMG("./maps/map" + str(i) + ".npy", self.dimensions, self.step, 5)
+
+        """for i in range(0, self.iteration, 1):
+            for n in range(0, self.num_particles):
+                print("Generating map " + str(i) + "-" + str(n) +  "...")
+                npyToMapIMG("./maps/map" + str(i) + "-" + str(n) +".npy", self.dimensions, self.step, 5)"""
 
 if __name__ == "__main__":
     rospy.loginfo("Starting")
     particles = 20 #Number of particles to maintain
     map_size = (20, 20) #Map dimensions [-m, m] x [-n, n] in meters
-    step_size = .3 #Step size in meters. Must be <= 1
+    step_size = .2 #Step size in meters. Must be <= 1
     try:
-        turtlebot_model = GenericBot(SensorModelSimple(stddev = 1.5), MotionModelSimple())
+        turtlebot_model = GenericBot(SensorModelNarrow(stddev = 1.5), MotionModelSimple())
         pfilter = ParticleFilter(particles, turtlebot_model, map_size, step_size)
     except Exception as er:
         rospy.logerr(er)

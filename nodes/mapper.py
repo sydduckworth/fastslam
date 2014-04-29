@@ -29,7 +29,9 @@ class Mapper(object):
 		self.current_pose = RobotPose()
 		self.new_scan = LaserScan()
 		self.new_pose = RobotPose()
-		self.sensor_model = SensorModelSimple()
+		self.temp_pose = RobotPose()
+		self.sensor_model = SensorModelNarrow()
+		self.got_scan = False
 		
 		rospy.init_node("mapper")
 		rospy.Subscriber("/base_scan", LaserScan, self.laser_callback)
@@ -38,27 +40,32 @@ class Mapper(object):
 
 	def laser_callback(self, data):
 		self.new_scan = data
+		self.new_pose = self.temp_pose
+		self.got_scan = True
 		#print("# of Scans: " + str(len(data.ranges))) #512 scans for our laser range finder!
 
 	def odom_callback(self, data):
 		[r,p,yaw] = euler_from_quaternion([data.pose.pose.orientation.x,data.pose.pose.orientation.y,data.pose.pose.orientation.z,data.pose.pose.orientation.w])
-		self.new_pose.x = data.pose.pose.position.x
-		self.new_pose.y = data.pose.pose.position.y
-		self.new_pose.theta = yaw
+		self.temp_pose.x = data.pose.pose.position.x
+		self.temp_pose.y = data.pose.pose.position.y
+		self.temp_pose.theta = yaw
 
 
 	def run(self):
 		rospy.loginfo("Done initializing particles")
 		while not rospy.is_shutdown():
-			self.sensor_model.update_map(self.current_scan, self.current_pose, self.map)
-			self.current_pose = self.new_pose
-			self.current_scan = self.new_scan
-			gridToNpyFile(self.map, self.current_pose, "./maps", "map" + str(Mapper.iteration))
-			Mapper.iteration += 1
-			rospy.loginfo(str(Mapper.iteration))
+			if self.got_scan:
+				self.map = self.sensor_model.update_map(self.current_scan, self.current_pose, self.map)
+				self.current_pose = self.new_pose
+				self.current_scan = self.new_scan
+				gridToNpyFile(self.map, self.current_pose, "./maps", "map" + str(Mapper.iteration))
+				Mapper.iteration += 1
+				rospy.loginfo(str(Mapper.iteration))
+				self.got_scan = False
+
 
 	def output_maps(self):
-		for i in range(0, self.iteration, 1):
+		for i in range(0, self.iteration, 10):
 			print("Generating map " + str(i) + "...")
 			npyToMapIMG("./maps/map" + str(i) + ".npy", self.dimensions, self.step, 5)
 

@@ -6,7 +6,7 @@ import timeit
 
 if __name__ == "__main__":
 	x = OccupancyGrid((10,10),.2)
-	r = 5
+	r = 8
 	init_angle = 0
 	end_angle = 2 * math.pi
 	step = .5 * math.atan2(x.step, r)
@@ -17,6 +17,6 @@ if __name__ == "__main__":
 		#x.fillTo((0, 0), (point_x, point_y))
 		x[point_x][point_y] = True
 		init_angle += step
-
+	x.fillRect((0, 0), .6, .6)
 	gridToNpyFile(x, RobotPose(), "./maps", "gridtest")
 	npyToMapIMG("./maps/gridtest.npy", (10, 10), .2, 5)

@@ -37,8 +37,8 @@ class MotionModelSimple(object):
 
 		dx = random.gauss(delta[0], self.stds[0])
 		dy = random.gauss(delta[1], self.stds[1])
-		dtheta = wrap_angle(random.gauss(delta[2], self.stds[2]))
-		return (old_particle.pose.x + dx, old_particle.pose.y + dy, old_particle.pose.theta + dtheta)
+		dtheta = random.gauss(delta[2], self.stds[2])
+		return (old_particle.pose.x + dx, old_particle.pose.y + dy, wrap_angle(old_particle.pose.theta + dtheta))
 
 	def prob_normal_dist(self, a, b):
 		# normal distribution (zero-centered)
