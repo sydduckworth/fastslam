@@ -29,6 +29,7 @@ def gridToNpyFile(occupancy_grid, robot_pose, dest_dir = "./default", fname = "d
 	array = [] #easiest to append grid cells to regular python array then convert this array to numpy array
 	robo_thresh = .2
 	robot_indicator = -1 #this is used to distinguish robot location in grid
+	print(robot_pose.x, robot_pose.y)
 	occupancy_grid[robot_pose.x][robot_pose.y] = -1
 	for x in occupancy_grid:
 		array.append([])

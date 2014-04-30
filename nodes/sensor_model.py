@@ -101,7 +101,7 @@ class SensorModelNarrow(object):
 	'''
 	def update(self, z_t, pose, m):
 		#TODO: probably don't want to use all range scans
-		scan_step = 10
+		scan_step = 1
 		result = 1.0
 		cur_angle = z_t.angle_min 				#store current angle in radians
 		inc_angle = z_t.angle_increment * scan_step 		#angle increment between scans in radians
