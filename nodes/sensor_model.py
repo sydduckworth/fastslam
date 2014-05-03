@@ -114,7 +114,7 @@ class SensorModelNarrow(object):
 				#print(self.getProbReadingGivenDistance(z_t.ranges[i], expected_distance, range_max))
 				result *= self.getProbReadingGivenDistance(z_t.ranges[i], expected_distance, range_max)
 			cur_angle += inc_angle
-		#print(result)
+		#`(result)
 		return result
 
 	def getProbReadingGivenDistance(self, sensor_distance = 0, expected_distance = 0, max_distance = 0):
@@ -148,10 +148,12 @@ class SensorModelNarrow(object):
 			cur_angle += inc_angle
 		return m
 
-class SensorModelLinear(object):
 
-	def __init__(self, stddev = 2.5):
+class SensorModelNarrowNoIntensity(object):
+
+	def __init__(self, stddev = 2.5, object_thickness = 1.0):
 		self.stddev = stddev
+		self.object_thickness = object_thickness
 
 	'''
 	update
@@ -164,7 +166,7 @@ class SensorModelLinear(object):
 	'''
 	def update(self, z_t, pose, m):
 		#TODO: probably don't want to use all range scans
-		scan_step = 50
+		scan_step = 1
 		result = 1.0
 		cur_angle = z_t.angle_min 				#store current angle in radians
 		inc_angle = z_t.angle_increment * scan_step 		#angle increment between scans in radians
@@ -196,16 +198,20 @@ class SensorModelLinear(object):
 		range_max = z_t.range_max
 
 		for r in xrange(0, len(z_t.ranges), scan_step):
-			#Step through scans, convert scan distance and angle into an x,y point
-			point_x = z_t.ranges[r] * math.cos(cur_angle) + pose.x
-			point_y = z_t.ranges[r] * math.sin(cur_angle) + pose.y
-			#Clear all points up to the sensed point
+			#Discard any infinite readings
+			if math.isnan(z_t.ranges[r]) or math.isinf(z_t.ranges[r]):
+				scan = range_max
+			else:
+				scan = z_t.ranges[r]
+			point_x = scan * math.cos(cur_angle) + pose.x
+			point_y = scan * math.sin(cur_angle) + pose.y
+			#Clear all points up to the sensed point, then set the sensed point to occupied
 			m.clearTo((pose.x, pose.y), (point_x, point_y))
-			#If the sensed point is occupied (high intensity), add it to the list of contiguous occupied points
-			if z_t.intensities[r] == 1.0:
-				m[point_x][point_y] = True
-				recip = -1 * (point_x - pose.x)/(point_y - pose.y)
-				m[point_x - m.step][point_y - recip] = True
-				m[point_x + m.step][point_y + recip] = True
-
+			if scan != range_max:
+				#m.fillRect((point_x, point_y), .6, .6)
+				#m[point_x][point_y] = True
+				obj_x = self.object_thickness * math.cos(cur_angle) + point_x
+				obj_y = self.object_thickness * math.sin(cur_angle) + point_y
+				m.fillTo((point_x, point_y), (obj_x, obj_y))
+			cur_angle += inc_angle
 		return m

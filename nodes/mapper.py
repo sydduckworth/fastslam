@@ -15,6 +15,7 @@ from sensor_model import *
 from particle import *
 from robot import *
 from drawing_tools import *
+from sensor_msgs.msg import Joy
 
 class Mapper(object):
 	"""
@@ -28,14 +29,22 @@ class Mapper(object):
 		self.map = OccupancyGrid(self.dimensions, self.step)
 		self.current_scan = LaserScan()
 		self.current_pose = RobotPose()
-		self.sensor_model = SensorModelNarrow()
+		self.sensor_model = SensorModelNarrowNoIntensity()
 		self.got_scan = False
 		self.first_odom = True
+		self.start = False
 		
 		rospy.init_node("mapper")
-		rospy.Subscriber("/base_scan", LaserScan, self.laser_callback)
+		rospy.Subscriber("/scan", LaserScan, self.laser_callback)
 		rospy.Subscriber("/odom", Odometry, self.odom_callback)
+		rospy.Subscriber("/joy", Joy, self.joy_callback)
 		atexit.register(self.output_maps)
+
+	def joy_callback(self, data):
+		if data.buttons[1]:
+			rospy.signal_shutdown("Joystick interrupt")
+		if data.buttons[0]:
+			self.start = True
 
 	def laser_callback(self, data):
 		self.current_scan = data
@@ -52,32 +61,38 @@ class Mapper(object):
 
 	def run(self, event = None):
 		while not rospy.is_shutdown():
-			if self.got_scan and self.first_odom:
+			if self.got_scan and self.first_odom and self.start:
 				#self.current_scan = self.new_scan
 				self.map = self.sensor_model.update_map(self.current_scan, self.current_pose, self.map)
-				gridToNpyFile(self.map, self.current_pose, "./maps", "map" + str(Mapper.iteration))
-				#gridToNpyFile(self.map, self.current_pose, "./maps", "map_final")
+				try:
+					gridToNpyFile(self.map, self.current_pose, "./maps", "map" + str(Mapper.iteration))
+					#gridToNpyFile(self.map, self.current_pose, "./maps", "map_final")
+				except:
+					pass
 				Mapper.iteration += 1
 				rospy.loginfo(str(Mapper.iteration))
 				self.got_scan = False
 
 	def output_maps(self):
 		for i in range(0, self.iteration, 10):
-			print("Generating map " + str(i) + "...")
-			npyToMapIMG("./maps/map" + str(i) + ".npy", self.dimensions, self.step, 5)
+			try:
+				print("Generating map " + str(i) + "...")
+				npyToMapIMG("./maps/map" + str(i) + ".npy", self.dimensions, self.step, 5)
+			except:
+				pass
 
 		"""print("Generating final map...")
-		npyToMapIMG("./maps/map" + str(self.iteration) + ".npy", self.dimensions, self.step, 5)"""
+		npyToMapIMG("./maps/map_final.npy", self.dimensions, self.step, 3)"""
 
 if __name__ == "__main__":
 	rospy.loginfo("Starting")
-	map_size = (20, 20) #Map dimensions [-m, m] x [-n, n] in meters
+	map_size = (40, 40) #Map dimensions [-m, m] x [-n, n] in meters
 	step_size = .2 #Step size in meters. Must be <= 1
 	try:
 		mapper= Mapper(map_size, step_size)
 	except Exception as er:
 		rospy.logerr(er)
 	finally:
-		"""rospy.Timer(rospy.Duration(.5), mapper.run)
-		rospy.spin()"""
+		#rospy.Timer(rospy.Duration(.5), mapper.run)
 		mapper.run()
+		
