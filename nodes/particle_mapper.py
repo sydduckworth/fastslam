@@ -43,9 +43,11 @@ class Mapper(object):
 		self.pose_delta = (0, 0, 0)		
 
 		self.sensor_model = SensorModelNarrow()
+		self.motion_model = MotionModelSimple(stds = (0.1, 0.1, 0.01))
 		self.got_scan = False
 		self.first_odom = True
 		self.start = True
+		self.produce_dr_map = False
 		
 		rospy.init_node("mapper")
 		rospy.Subscriber("/base_scan", LaserScan, self.laser_callback)
@@ -90,7 +92,8 @@ class Mapper(object):
 				#update current scan and current pose
 				self.update_state_info()
 				#update dead reckoning map
-				self.update_deadreckoning_map()
+				if self.produce_dr_map:
+					self.update_deadreckoning_map()
 				#update particles
 				self.update_particles()
 				
@@ -119,16 +122,11 @@ class Mapper(object):
 		#For each particle:
 		for i in xrange(0, len(self.particles)):
 			#########################################################
-			########## MOTION MODEL (UPDATE PARTICLE POSE) ##########
-			#for now hardcode motion model
-			#add random noise to pose delta (only if we've actually detected movement)
-			dx = random.gauss(self.pose_delta[0], Mapper.pose_noise) if self.pose_delta[0] != 0 else 0
-			dy = random.gauss(self.pose_delta[1], Mapper.pose_noise) if self.pose_delta[1] != 0 else 0
-			dtheta = random.gauss(self.pose_delta[2], Mapper.pose_noise) if self.pose_delta[2] != 0 else 0
-			#update particle pose
-			self.particles[i].pose.x += dx
-			self.particles[i].pose.y += dy
-			self.particles[i].pose.theta = wrap_angle(self.particles[i].pose.theta + dtheta)
+			########## MOTION MODEL (UPDATE PARTICLE POSE) ##########	
+			x, y, theta = self.motion_model.update(self.particles[i], self.pose_delta)
+			self.particles[i].pose.x = x
+			self.particles[i].pose.y = y
+			self.particles[i].pose.theta = theta
 			#########################################################
 			######## GET PARTICLE WEIGHT USING SENSOR MODEL #########
 			self.particles[i].weight = self.sensor_model.update(z_t = self.current_scan, pose = self.particles[i].pose, m = self.particles[i].grid)
@@ -204,12 +202,14 @@ class Mapper(object):
 
 
 	def output_maps(self):
-		for i in range(0, self.iteration, 1):
-			try:
-				print("Generating dr map " + str(i) + "...")
-				npyToMapIMG("./maps/dr_map" + str(i) + ".npy", self.dimensions, self.step, 5)
-			except:
-				pass
+		if self.produce_dr_map:
+			for i in range(0, self.iteration, 1):
+				try:
+					print("Generating dr map " + str(i) + "...")
+					npyToMapIMG("./maps/dr_map" + str(i) + ".npy", self.dimensions, self.step, 5)
+				except:
+					pass
+					
 		for i in range(0, self.iteration, 1):
 			try:
 				print("Generating max particle map " + str(i) + "...")
