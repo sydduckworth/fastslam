@@ -209,7 +209,7 @@ class Mapper(object):
 					npyToMapIMG("./maps/dr_map" + str(i) + ".npy", self.dimensions, self.step, 5)
 				except:
 					pass
-					
+
 		for i in range(0, self.iteration, 1):
 			try:
 				print("Generating max particle map " + str(i) + "...")
@@ -222,7 +222,7 @@ class Mapper(object):
 
 if __name__ == "__main__":
 	rospy.loginfo("Starting")
-	map_size = (40, 40) #Map dimensions [-m, m] x [-n, n] in meters
+	map_size = (20, 20) #Map dimensions [-m, m] x [-n, n] in meters
 	step_size = .2 #Step size in meters. Must be <= 1
 	try:
 		mapper= Mapper(map_size, step_size)

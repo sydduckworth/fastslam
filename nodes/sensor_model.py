@@ -89,6 +89,7 @@ class SensorModelNarrow(object):
 	def __init__(self, stddev = 2.5, object_thickness = 1.0):
 		self.stddev = stddev
 		self.object_thickness = object_thickness
+		self.scan_step = 30
 
 	'''
 	update
@@ -100,15 +101,14 @@ class SensorModelNarrow(object):
 		note: importance weight is a belief in the current sensor reading given the pose and the map
 	'''
 	def update(self, z_t, pose, m):
-		#TODO: probably don't want to use all range scans
-		scan_step = 10
+		scan_step = self.scan_step
 		result = 0
-		cur_angle = z_t.angle_min 				#store current angle in radians
+		cur_angle = z_t.angle_min 							#store current angle in radians
 		inc_angle = z_t.angle_increment * scan_step 		#angle increment between scans in radians
 		range_max = z_t.range_max
 		normalization_constant = 0
 		for i in xrange(0, len(z_t.ranges), scan_step):
-			object_coords = m.rayTrace((pose.x, pose.y), pose.theta - cur_angle) #TODO: correct angle??
+			object_coords = m.rayTrace((pose.x, pose.y), pose.theta - cur_angle) 
 			#get the expected distance to obstacle
 			if object_coords:
 				expected_distance = euclidean_distance(object_coords, (pose.x, pose.y))
