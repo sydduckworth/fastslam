@@ -101,20 +101,31 @@ class SensorModelNarrow(object):
 	'''
 	def update(self, z_t, pose, m):
 		#TODO: probably don't want to use all range scans
-		scan_step = 1
-		result = 1.0
+		scan_step = 10
+		result = 0
 		cur_angle = z_t.angle_min 				#store current angle in radians
 		inc_angle = z_t.angle_increment * scan_step 		#angle increment between scans in radians
 		range_max = z_t.range_max
+		normalization_constant = 0
 		for i in xrange(0, len(z_t.ranges), scan_step):
-			object_coords = m.rayTrace((pose.x, pose.y), pose.theta - cur_angle)
+			object_coords = m.rayTrace((pose.x, pose.y), pose.theta - cur_angle) #TODO: correct angle??
 			#get the expected distance to obstacle
 			if object_coords:
 				expected_distance = euclidean_distance(object_coords, (pose.x, pose.y))
-				#print(self.getProbReadingGivenDistance(z_t.ranges[i], expected_distance, range_max))
-				result *= self.getProbReadingGivenDistance(z_t.ranges[i], expected_distance, range_max)
+
+				#check if scan is nan or inf
+				if math.isnan(z_t.ranges[i]) or math.isinf(z_t.ranges[i]):
+					#if so, set scan to max range
+					scan = range_max
+				else:
+					#else, scan reading is okay
+					scan = z_t.ranges[i]
+				#get probability of the reading given the expected reading and update result
+				result += self.getProbReadingGivenDistance(scan, expected_distance, range_max)
+				normalization_constant += 1 #max probability = 1, add max probability of scan to normalization constant
 			cur_angle += inc_angle
-		#`(result)
+		normalization_constant = 1 if normalization_constant == 0 else normalization_constant
+		result = result/float(normalization_constant) #normalize the result
 		return result
 
 	def getProbReadingGivenDistance(self, sensor_distance = 0, expected_distance = 0, max_distance = 0):
@@ -166,20 +177,31 @@ class SensorModelNarrowNoIntensity(object):
 	'''
 	def update(self, z_t, pose, m):
 		#TODO: probably don't want to use all range scans
-		scan_step = 1
-		result = 1.0
+		scan_step = 10
+		result = 0
 		cur_angle = z_t.angle_min 				#store current angle in radians
 		inc_angle = z_t.angle_increment * scan_step 		#angle increment between scans in radians
 		range_max = z_t.range_max
+		normalization_constant = 0
 		for i in xrange(0, len(z_t.ranges), scan_step):
-			object_coords = m.rayTrace((pose.x, pose.y), pose.theta - cur_angle)
+			object_coords = m.rayTrace((pose.x, pose.y), pose.theta - cur_angle) #TODO: correct angle??
 			#get the expected distance to obstacle
 			if object_coords:
 				expected_distance = euclidean_distance(object_coords, (pose.x, pose.y))
-				#print(self.getProbReadingGivenDistance(z_t.ranges[i], expected_distance, range_max))
-				result *= self.getProbReadingGivenDistance(z_t.ranges[i], expected_distance, range_max)
+
+				#check if scan is nan or inf
+				if math.isnan(z_t.ranges[i]) or math.isinf(z_t.ranges[i]):
+					#if so, set scan to max range
+					scan = range_max
+				else:
+					#else, scan reading is okay
+					scan = z_t.ranges[i]
+				#get probability of the reading given the expected reading and update result
+				result += self.getProbReadingGivenDistance(scan, expected_distance, range_max)
+				normalization_constant += 1 #max probability = 1, add max probability of scan to normalization constant
 			cur_angle += inc_angle
-		#print(result)
+		normalization_constant = 1 if normalization_constant == 0 else normalization_constant
+		result = result/float(normalization_constant) #normalize the result
 		return result
 
 	def getProbReadingGivenDistance(self, sensor_distance = 0, expected_distance = 0, max_distance = 0):

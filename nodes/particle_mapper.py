@@ -26,6 +26,7 @@ class Mapper(object):
 	"""
 	iteration = 0 #Keeps track of the number of times that the particles have been resampled.
 	pose_noise = 0.1
+	percent_random = .1
 	def __init__(self, dimensions, step):
 		self.dimensions = dimensions
 		self.step = step
@@ -41,7 +42,7 @@ class Mapper(object):
 		self.current_pose = RobotPose()
 		self.pose_delta = (0, 0, 0)		
 
-		self.sensor_model = SensorModelNarrowNoIntensity()
+		self.sensor_model = SensorModelNarrow()
 		self.got_scan = False
 		self.first_odom = True
 		self.start = True
@@ -50,7 +51,7 @@ class Mapper(object):
 		rospy.Subscriber("/base_scan", LaserScan, self.laser_callback)
 		rospy.Subscriber("/odom", Odometry, self.odom_callback)
 		rospy.Subscriber("/joy", Joy, self.joy_callback)
-		#atexit.register(self.output_maps)
+		atexit.register(self.output_maps)
 
 	def joy_callback(self, data):
 		if data.buttons[1]:
@@ -88,33 +89,37 @@ class Mapper(object):
 				rospy.loginfo("Iteration: " + str(Mapper.iteration))
 				#update current scan and current pose
 				self.update_state_info()
+				#update dead reckoning map
+				self.update_deadreckoning_map()
 				#update particles
 				self.update_particles()
 				
-				self.print_random_particle_pose()
+				#self.print_particle_pose()
 				self.got_scan = False
 				Mapper.iteration += 1
 
-	def print_random_particle_pose(self):
-		i = random.randint(0, len(self.particles) - 1)
-		i = 2
+	def update_deadreckoning_map(self):
+		self.map = self.sensor_model.update_map(self.current_scan, self.current_pose, self.map)
+		try:
+			gridToNpyFile(self.map, self.current_pose, "./maps", "dr_map" + str(Mapper.iteration))
+			#gridToNpyFile(self.map, self.current_pose, "./maps", "map_final")
+		except:
+			pass
+
+	def print_particle_pose(self, index = None):
+		i = random.randint(0, len(self.particles) - 1) if index == None else index
 		x = self.particles[i].pose.x
 		y = self.particles[i].pose.y
 		theta = math.degrees(self.particles[i].pose.theta)
+		weight = self.particles[i].weight
 		print("Random Pose: (" + str(x) + ", " + str(y) + ", " + str(theta) + ")")
+		print("Particle weight: " + str(weight))
 
 	def update_particles(self):
-		#1. advance physics using motion model
-		self.advance_particles()
-		#2. get particle weights using sensor model
-		#3. update the occupancy grid
-		#4. resample the particles
-
-	def advance_particles(self):
-		"""
-			Use motion model to advance the particles
-		"""
+		#For each particle:
 		for i in xrange(0, len(self.particles)):
+			#########################################################
+			########## MOTION MODEL (UPDATE PARTICLE POSE) ##########
 			#for now hardcode motion model
 			#add random noise to pose delta (only if we've actually detected movement)
 			dx = random.gauss(self.pose_delta[0], Mapper.pose_noise) if self.pose_delta[0] != 0 else 0
@@ -124,7 +129,48 @@ class Mapper(object):
 			self.particles[i].pose.x += dx
 			self.particles[i].pose.y += dy
 			self.particles[i].pose.theta = wrap_angle(self.particles[i].pose.theta + dtheta)
+			#########################################################
+			######## GET PARTICLE WEIGHT USING SENSOR MODEL #########
+			self.particles[i].weight = self.sensor_model.update(z_t = self.current_scan, pose = self.particles[i].pose, m = self.particles[i].grid)
+			#########################################################
+			################# UPDATE PARTICLE MAP ###################
+			self.particles[i].grid = self.sensor_model.update_map(self.current_scan, self.particles[i].pose, self.particles[i].grid)
 
+		self.resample_particles()
+
+	def resample_particles(self):
+		random_particles = int(self.num_particles * Mapper.percent_random)
+		new_particles = []
+		total_weight = 0
+		max_particle = 0
+
+		#search for maximum particle to save map, and sum all particle weights
+		for i in xrange(0, len(self.particles)):
+			total_weight += self.particles[i].weight
+			if (self.particles[i].weight > self.particles[max_particle].weight):
+				max_particle = i
+		#save out max particle's map	
+		self.print_particle_pose(index = max_particle)
+		gridToNpyFile(self.particles[max_particle].grid, self.particles[max_particle].pose, "./maps", "mp_map" + str(Mapper.iteration))
+
+		#sample based on weights
+		for i in xrange(0, len(self.particles) - random_particles):
+			r = random.uniform(0, total_weight)
+			tw = 0
+			k = 0
+			while tw < r:
+				tw = tw + self.particles[k].weight
+				k += 1
+			new_particle = copy.deepcopy(self.particles[k - 1])
+			new_particles.append(new_particle)
+
+		#sample randomly
+		for i in xrange(0, random_particles):
+			r = random.randint(0, len(self.particles) - 1)
+			new_particle = copy.deepcopy(self.particles[i])
+			new_particles.append(new_particle)
+
+		self.particles = new_particles
 
 	def update_state_info(self):
 		"""
@@ -158,10 +204,16 @@ class Mapper(object):
 
 
 	def output_maps(self):
-		for i in range(0, self.iteration, 10):
+		for i in range(0, self.iteration, 1):
 			try:
-				print("Generating map " + str(i) + "...")
-				npyToMapIMG("./maps/map" + str(i) + ".npy", self.dimensions, self.step, 5)
+				print("Generating dr map " + str(i) + "...")
+				npyToMapIMG("./maps/dr_map" + str(i) + ".npy", self.dimensions, self.step, 5)
+			except:
+				pass
+		for i in range(0, self.iteration, 1):
+			try:
+				print("Generating max particle map " + str(i) + "...")
+				npyToMapIMG("./maps/mp_map" + str(i) + ".npy", self.dimensions, self.step, 5)
 			except:
 				pass
 

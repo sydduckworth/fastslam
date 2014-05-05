@@ -32,10 +32,10 @@ class Mapper(object):
 		self.sensor_model = SensorModelNarrowNoIntensity()
 		self.got_scan = False
 		self.first_odom = True
-		self.start = False
+		self.start = True
 		
 		rospy.init_node("mapper")
-		rospy.Subscriber("/scan", LaserScan, self.laser_callback)
+		rospy.Subscriber("/base_scan", LaserScan, self.laser_callback)
 		rospy.Subscriber("/odom", Odometry, self.odom_callback)
 		rospy.Subscriber("/joy", Joy, self.joy_callback)
 		atexit.register(self.output_maps)
