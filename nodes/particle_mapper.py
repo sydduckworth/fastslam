@@ -42,11 +42,11 @@ class Mapper(object):
 		self.current_pose = RobotPose()
 		self.pose_delta = (0, 0, 0)		
 
-		self.sensor_model = SensorModelNarrow()
+		self.sensor_model = SensorModelNarrowNoIntensity()
 		self.motion_model = MotionModelSimple(stds = (0.1, 0.1, 0.01))
 		self.got_scan = False
-		self.first_odom = True
-		self.start = True
+		self.first_odom = False
+		self.start = False
 		self.produce_dr_map = False
 		
 		rospy.init_node("mapper")
@@ -203,14 +203,14 @@ class Mapper(object):
 
 	def output_maps(self):
 		if self.produce_dr_map:
-			for i in range(0, self.iteration, 1):
+			for i in range(0, self.iteration, 5):
 				try:
 					print("Generating dr map " + str(i) + "...")
 					npyToMapIMG("./maps/dr_map" + str(i) + ".npy", self.dimensions, self.step, 5)
 				except:
 					pass
 
-		for i in range(0, self.iteration, 1):
+		for i in range(0, self.iteration, 5):
 			try:
 				print("Generating max particle map " + str(i) + "...")
 				npyToMapIMG("./maps/mp_map" + str(i) + ".npy", self.dimensions, self.step, 5)
