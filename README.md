@@ -1,4 +1,4 @@
-#**WARNING**: This is a learning project intended to provide an easy-to-understand implementation of FastSLAM for introductory purposes. It usesnaive sensor and motion models and implements many levels of abstraction that have a profound impact on its speed. This project is not actively maintained. Use at your own risk.
+#**WARNING**: This is a learning project intended to provide an easy-to-understand implementation of FastSLAM for introductory purposes. It uses naive sensor and motion models and implements many levels of abstraction that have a profound impact on its speed. This project is not actively maintained. Use at your own risk.
 
 # FastSLAM
 **Authors: Dexter Duckworth, Alex Lalejini, Brandon Odom**
